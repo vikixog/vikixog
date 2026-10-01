@@ -1,7 +1,7 @@
 name: Build AILIS Personal portable EXE
 on:
   push:
-    branches: [master, ailis-personal-build]
+    branches: [ailis-personal-build]
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
 
       - name: Apply AILIS Personal changes
         shell: pwsh
-        run: node apply-local-first-v2.mjs "${env:GITHUB_WORKSPACE}/_ailis"
+        run: node apply-local-first-v2.mjs "$env:GITHUB_WORKSPACE/_ailis"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
