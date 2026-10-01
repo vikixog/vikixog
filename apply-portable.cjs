@@ -15,11 +15,13 @@ W('package.json',JSON.stringify(pkg,null,2)+'\n');
 rep('electron-builder.yml','appId: com.ailis.desktop','appId: com.ailis.personal','appId');
 rep('electron-builder.yml','productName: AILIS','productName: AILIS Personal','productName');
 rep('electron-builder.yml','  executableName: AILIS','  executableName: AILIS-Personal','executableName');
+rep('electron-builder.yml','  ailisBundledAsr: true','  ailisBundledAsr: false','disable missing bundled ASR contract');
+opt('electron-builder.yml',/extraResources:\n(?:  - from: build-cache\/ailis-wake-model[\s\S]*?\n(?=asar: true))/, 'asar: true\n', 'remove absent generated runtime packs');
 
 rep('electron/desktop-llm-provider.cjs','const DEFAULT_PROVIDER = OPENAI_COMPATIBLE_PROVIDER;', "const DEFAULT_PROVIDER = 'ollama';",'default local LLM');
 
 rep('electron/store.cjs',"const DEFAULT_LLM_PROVIDER = AILIS_CLOUD_PROVIDER;\nconst DEFAULT_LLM_BASE_URL = 'https://150.109.13.189/api/llm/v1';\nconst DEFAULT_LLM_MODEL = 'ailis-cloud';","const DEFAULT_LLM_PROVIDER = 'ollama';\nconst DEFAULT_LLM_BASE_URL = 'http://127.0.0.1:11434';\nconst DEFAULT_LLM_MODEL = 'qwen2.5:1.5b';",'store defaults');
-rep('electron/store.cjs',"return provider === 'ailis-cloud' ? 'server' : provider === 'ollama' ? 'local' : 'direct';","return provider === 'ailis-cloud' ? 'server' : ['ollama','vllm'].includes(provider) ? 'local' : 'direct';",'store local mode');
+rep('electron/store.cjs',"return provider === 'ailis-cloud' ? 'server' : provider === 'ollama' ? 'local' : 'direct';", "return provider === 'ailis-cloud' ? 'server' : ['ollama','vllm'].includes(provider) ? 'local' : 'direct';",'store local mode');
 
 opt('src/control-panel-app.js',/const visibleProviders = Array\.from\(new Set\(\[\.\.\.providerOptions, 'ollama'\]\)\)\n\s*\.filter\(\(provider\) => provider !== 'vllm'\)/,"const visibleProviders = Array.from(new Set([...providerOptions, 'vllm', 'ollama']))");
 opt('src/control-panel-app.js',/(\n\s*ollama: 'Ollama 本地')/,"$1,\n    vllm: 'vLLM 本地'");
