@@ -1,0 +1,64 @@
+name: Build AILIS Personal portable EXE
+on:
+  push:
+    branches: [ailis-personal-build]
+  workflow_dispatch:
+
+jobs:
+  windows-portable:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout build harness
+        uses: actions/checkout@v4
+
+      - name: Checkout AILIS 1.4.8 base
+        shell: pwsh
+        run: git clone --depth 1 --branch v1.4.8 https://github.com/haowenGuo/AILIS.git _ailis
+
+      - name: Apply AILIS Personal changes
+        shell: pwsh
+        run: node apply-local-first.mjs "$env:GITHUB_WORKSPACE/_ailis"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: _ailis/pnpm-lock.yaml
+
+      - name: Install dependencies
+        shell: pwsh
+        working-directory: _ailis
+        run: pnpm install --frozen-lockfile
+
+      - name: Build desktop bundle
+        shell: pwsh
+        working-directory: _ailis
+        run: pnpm build:desktop
+
+      - name: Build portable Windows EXE
+        shell: pwsh
+        working-directory: _ailis
+        run: pnpm exec electron-builder --win portable --config electron-builder.yml
+
+      - name: Verify portable EXE
+        shell: pwsh
+        working-directory: _ailis
+        run: |
+          $exe = Get-ChildItem .\release\*Portable*win-x64.exe | Select-Object -First 1
+          if (-not $exe) { throw 'Portable EXE was not produced.' }
+          Write-Host "Produced: $($exe.FullName)"
+          Write-Host "Size bytes: $($exe.Length)"
+
+      - name: Upload portable EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: AILIS-Personal-Portable-win-x64
+          path: _ailis/release/*Portable*win-x64.exe
+          if-no-files-found: error
