@@ -1,7 +1,7 @@
 name: Build AILIS Personal portable EXE
 on:
   push:
-    branches: [ailis-personal-build]
+    branches: [master, ailis-personal-build]
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
 
       - name: Apply AILIS Personal changes
         shell: pwsh
-        run: node apply-local-first.mjs "$env:GITHUB_WORKSPACE/_ailis"
+        run: node apply-local-first-v2.mjs "${env:GITHUB_WORKSPACE}/_ailis"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -51,7 +51,7 @@ jobs:
         shell: pwsh
         working-directory: _ailis
         run: |
-          $exe = Get-ChildItem .\release\*Portable*win-x64.exe | Select-Object -First 1
+          $exe = Get-ChildItem .elease*Portable*win-x64.exe | Select-Object -First 1
           if (-not $exe) { throw 'Portable EXE was not produced.' }
           Write-Host "Produced: $($exe.FullName)"
           Write-Host "Size bytes: $($exe.Length)"
